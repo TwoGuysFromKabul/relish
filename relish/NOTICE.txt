@@ -16,6 +16,10 @@
    derived from this software without prior written permission. For 
    written permission, please contact impentaj@users.sf.net. 
    
+   This product includes software developed by the XenQTT project
+   (http://xenqtt.sourceforge.net)
+   License URL: http://http://www.apache.org/licenses/LICENSE-2.0
+   
    This product includes software developed by the JUnit project
    (http://junit.sourceforge.net)
    License URL: http://junit.sourceforge.net/cpl-v10.html
