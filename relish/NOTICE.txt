@@ -20,6 +20,26 @@
    (http://xenqtt.sourceforge.net)
    License URL: http://http://www.apache.org/licenses/LICENSE-2.0
    
+   This product includes software developed by the Cucumber-JVM project
+   (https://github.com/cucumber/cucumber-jvm)
+   License URL: https://github.com/cucumber/cucumber-jvm/blob/master/LICENCE
+   
+   This product includes software developed by the Apache Commons project
+   (http://commons.apache.org/)
+   License URL: http://www.apache.org/licenses/
+   
+   This product includes software developed by the Eclipse Jetty project
+   (http://www.eclipse.org/jetty/)
+   License URL: http://www.eclipse.org/jetty/licenses.php
+   
+   This product includes software developed by the SLF4J project
+   (http://www.slf4j.org/)
+   License URL: http://www.slf4j.org/license.html
+   
+   This product includes software developed by the Jackson project
+   (http://jackson.codehaus.org/)
+   License URL: http://http://www.apache.org/licenses/LICENSE-2.0
+   
    This product includes software developed by the JUnit project
    (http://junit.sourceforge.net)
    License URL: http://junit.sourceforge.net/cpl-v10.html
