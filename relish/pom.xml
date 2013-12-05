@@ -265,7 +265,7 @@
 	<scm>
 		<connection>scm:svn:https://svn.code.sf.net/p/relish/code/trunk</connection>
 		<developerConnection>scm:svn:https://svn.code.sf.net/p/relish/code/trunk</developerConnection>
-		<url>https://svn.code.sf.net/p/relishk/code/trunk</url>
+		<url>https://svn.code.sf.net/p/relish/code/trunk</url>
 	</scm>
 	<developers>
 		<developer>
