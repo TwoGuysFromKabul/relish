@@ -10,7 +10,7 @@ Scenario: JDBC
 		| jkl  | mno  | pqr  |
 		
 	When JDBC connection "foo" executes query "delete * from foo" 
-		
+	
 	Then JDBC connection "foo" query "select count(*) from foo" result count should be 5 
 	Then JDBC connection "foo" query "select count(*) from foo" result count should be 5 within 2 seconds 
 	Then JDBC connection "foo" query "select * from foo" results should be these records: 
