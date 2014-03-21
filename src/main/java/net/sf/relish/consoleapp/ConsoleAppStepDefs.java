@@ -23,7 +23,7 @@ import cucumber.api.java.en.When;
  */
 public final class ConsoleAppStepDefs {
 
-	private final Map<String, Method> stopMethodByClassName = new HashMap<String, Method>();
+	private final Map<String, ConsoleApp> consoleApps = new HashMap<String, ConsoleApp>();
 
 	/**
 	 * Runs after each relish scenario
@@ -31,9 +31,9 @@ public final class ConsoleAppStepDefs {
 	@After
 	public void after() throws Exception {
 
-		Iterator<Method> iter = stopMethodByClassName.values().iterator();
+		Iterator<ConsoleApp> iter = consoleApps.values().iterator();
 		while (iter.hasNext()) {
-			iter.next().invoke(null);
+			stopConsoleApp(iter.next());
 			iter.remove();
 		}
 	}
@@ -55,7 +55,7 @@ public final class ConsoleAppStepDefs {
 	@Given("^console app \"(\\S.+\\S)\" is running(?: from JAR \"(\\S.*)\")?(?: with args: (\\S.*))?$")
 	public void javaClassIsRunning(String javaClass, String jarFile, String argString) throws Exception {
 
-		if (stopMethodByClassName.containsKey(javaClass)) {
+		if (consoleApps.containsKey(javaClass)) {
 			throw new RelishException("You may not start console app %s because it is already running", javaClass);
 		}
 
@@ -70,13 +70,14 @@ public final class ConsoleAppStepDefs {
 			throw new RelishException("Method 'main(String[])' in class %s must be static", javaClass);
 		}
 
-		mainMethod.invoke(null, (Object) args);
-
 		Method stopMethod = clazz.getMethod("stop");
 		if (!Modifier.isStatic(stopMethod.getModifiers())) {
 			throw new RelishException("Method 'stop()' in class %s must be static", javaClass);
 		}
-		stopMethodByClassName.put(javaClass, stopMethod);
+
+		ConsoleApp consoleApp = new ConsoleApp(javaClass, mainMethod, args, stopMethod);
+		consoleApp.start();
+		consoleApps.put(javaClass, consoleApp);
 	}
 
 	/**
@@ -88,11 +89,17 @@ public final class ConsoleAppStepDefs {
 	@When("^console app \"(\\S.+\\S)\" is stopped$")
 	public void javaClassIsStopped(String javaClass) throws Exception {
 
-		Method stopMethod = stopMethodByClassName.remove(javaClass);
-		if (stopMethod == null) {
+		ConsoleApp consoleApp = consoleApps.remove(javaClass);
+		if (consoleApp == null) {
 			throw new RelishException("You cannot stop console app %s because it is not running", javaClass);
 		}
-		stopMethod.invoke(null);
+
+		stopConsoleApp(consoleApp);
+	}
+
+	private void stopConsoleApp(ConsoleApp consoleApp) throws Exception {
+		consoleApp.stopMethod.invoke(null);
+		consoleApp.join();
 	}
 
 	private ClassLoader getClassLoader(String jarFile) throws Exception {
@@ -196,5 +203,29 @@ public final class ConsoleAppStepDefs {
 
 			return argBuilder.toString();
 		}
+	}
+
+	private static final class ConsoleApp extends Thread {
+
+		private final Method mainMethod;
+		private final String[] args;
+		private final Method stopMethod;
+
+		private ConsoleApp(String appName, Method mainMethod, String[] args, Method stopMethod) {
+			super("ConsoleApp-" + appName);
+			this.mainMethod = mainMethod;
+			this.args = args;
+			this.stopMethod = stopMethod;
+		}
+
+		@Override
+		public void run() {
+			try {
+				mainMethod.invoke(null, (Object) args);
+			} catch (Exception ex) {
+				throw new RelishException(ex, "The console application %s threw an exception from its main method.", getName().replaceAll("^[^\\-]+-", ""));
+			}
+		}
+
 	}
 }

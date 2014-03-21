@@ -4,6 +4,10 @@ import static org.junit.Assert.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+
+import net.sf.relish.RelishException;
+import net.sf.relish.TestMainClass;
 
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -13,9 +17,6 @@ import org.junit.rules.ExpectedException;
 import org.junit.runners.MethodSorters;
 import org.mockito.MockitoAnnotations;
 
-import net.sf.relish.RelishException;
-import net.sf.relish.TestMainClass;
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ConsoleAppStepDefsTest {
 
@@ -24,10 +25,15 @@ public class ConsoleAppStepDefsTest {
 	static Map<Class<?>, String[]> mainArgsByClass;
 	static int stopCount;
 
+	static CountDownLatch testOneLatch;
+	static CountDownLatch testTwoLatch;
+
 	@Before
 	public void before() {
 		MockitoAnnotations.initMocks(this);
 		mainArgsByClass = new HashMap<Class<?>, String[]>();
+		testOneLatch = new CountDownLatch(1);
+		testTwoLatch = new CountDownLatch(1);
 		stopCount = 0;
 	}
 
@@ -72,6 +78,8 @@ public class ConsoleAppStepDefsTest {
 
 		steps.javaClassIsRunning(TestClass1.class.getName(), null, "foo 123");
 		steps.javaClassIsRunning(TestClass2.class.getName(), null, "bar 456");
+		testOneLatch.await();
+		testTwoLatch.await();
 		assertEquals(2, mainArgsByClass.size());
 		assertArrayEquals(new String[] { "foo", "123" }, mainArgsByClass.get(TestClass1.class));
 		assertArrayEquals(new String[] { "bar", "456" }, mainArgsByClass.get(TestClass2.class));
@@ -81,6 +89,7 @@ public class ConsoleAppStepDefsTest {
 	public void testJavaClassIsRunning_FromClasspath_NoArgs() throws Exception {
 
 		steps.javaClassIsRunning(TestClass1.class.getName(), null, null);
+		testOneLatch.await();
 		assertEquals(1, mainArgsByClass.size());
 		assertArrayEquals(new String[] {}, mainArgsByClass.get(TestClass1.class));
 	}
@@ -89,6 +98,7 @@ public class ConsoleAppStepDefsTest {
 	public void testJavaClassIsRunning_FromClasspath_OneArg() throws Exception {
 
 		steps.javaClassIsRunning(TestClass1.class.getName(), null, "abc");
+		testOneLatch.await();
 		assertEquals(1, mainArgsByClass.size());
 		assertArrayEquals(new String[] { "abc" }, mainArgsByClass.get(TestClass1.class));
 	}
@@ -97,6 +107,7 @@ public class ConsoleAppStepDefsTest {
 	public void testJavaClassIsRunning_FromClasspath_MultipleArgs() throws Exception {
 
 		steps.javaClassIsRunning(TestClass1.class.getName(), null, "abc 123");
+		testOneLatch.await();
 		assertEquals(1, mainArgsByClass.size());
 		assertArrayEquals(new String[] { "abc", "123" }, mainArgsByClass.get(TestClass1.class));
 	}
@@ -105,6 +116,7 @@ public class ConsoleAppStepDefsTest {
 	public void testJavaClassIsRunning_FromClasspath_ArgsWithLeadingWhiteSpace() throws Exception {
 
 		steps.javaClassIsRunning(TestClass1.class.getName(), null, "  abc 123");
+		testOneLatch.await();
 		assertEquals(1, mainArgsByClass.size());
 		assertArrayEquals(new String[] { "abc", "123" }, mainArgsByClass.get(TestClass1.class));
 	}
@@ -113,6 +125,7 @@ public class ConsoleAppStepDefsTest {
 	public void testJavaClassIsRunning_FromClasspath_ArgsWithTrailingWhiteSpace() throws Exception {
 
 		steps.javaClassIsRunning(TestClass1.class.getName(), null, "abc 123  ");
+		testOneLatch.await();
 		assertEquals(1, mainArgsByClass.size());
 		assertArrayEquals(new String[] { "abc", "123" }, mainArgsByClass.get(TestClass1.class));
 	}
@@ -121,6 +134,7 @@ public class ConsoleAppStepDefsTest {
 	public void testJavaClassIsRunning_FromClasspath_QuotedArgs() throws Exception {
 
 		steps.javaClassIsRunning(TestClass1.class.getName(), null, "\"abc 123\" \"def \n 456\"");
+		testOneLatch.await();
 		assertEquals(1, mainArgsByClass.size());
 		assertArrayEquals(new String[] { "abc 123", "def \n 456" }, mainArgsByClass.get(TestClass1.class));
 	}
@@ -156,8 +170,7 @@ public class ConsoleAppStepDefsTest {
 	public void testJavaClassIsStopped_FromClasspath_ClassNotRunning() throws Exception {
 
 		expectedException.expect(RelishException.class);
-		expectedException
-				.expectMessage("You cannot stop console app net.sf.relish.consoleapp.ConsoleAppStepDefsTest$TestClass1 because it is not running");
+		expectedException.expectMessage("You cannot stop console app net.sf.relish.consoleapp.ConsoleAppStepDefsTest$TestClass1 because it is not running");
 
 		steps.javaClassIsStopped(TestClass1.class.getName());
 	}
@@ -179,23 +192,33 @@ public class ConsoleAppStepDefsTest {
 
 	static class TestClass1 {
 
-		public static void main(String[] args) {
+		private static final CountDownLatch shutdownLatch = new CountDownLatch(1);
+
+		public static void main(String[] args) throws Exception {
 			mainArgsByClass.put(TestClass1.class, args);
+			testOneLatch.countDown();
+			shutdownLatch.await();
 		}
 
 		public static void stop() {
 			stopCount++;
+			shutdownLatch.countDown();
 		}
 	}
 
 	static class TestClass2 {
 
-		public static void main(String[] args) {
+		private static final CountDownLatch shutdownLatch = new CountDownLatch(1);
+
+		public static void main(String[] args) throws Exception {
 			mainArgsByClass.put(TestClass2.class, args);
+			testTwoLatch.countDown();
+			shutdownLatch.await();
 		}
 
 		public static void stop() {
 			stopCount++;
+			shutdownLatch.countDown();
 		}
 	}
 }
