@@ -57,4 +57,7 @@ Scenario: Validate web service requests
     Then web service "pump" should have at least 1 request within 2 seconds
     Then web service "pump" should have at most 6 requests
     Then web service "pump" should have exactly 7 requests
-
+    Then web service "pump" request 1 payload should should be the following JSON object:
+    """
+    {"a":"b","c":1,"d":true,"e":[1, 2, 3],"f":{"g":7,"h":"foo"},"i":4.567}
+    """

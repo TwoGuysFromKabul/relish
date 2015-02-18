@@ -11,22 +11,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import net.sf.relish.CountQuantifier;
+import net.sf.relish.DataFormat;
+import net.sf.relish.NameValuePair;
+import net.sf.relish.RelishException;
+import net.sf.relish.RelishUtil;
+import net.sf.relish.TableMatcher;
+import net.sf.relish.rule.ElapsedTime;
+import net.sf.relish.web.AbstractWebServerTest;
+import net.sf.relish.web.HttpMethod;
+
 import org.junit.After;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runners.MethodSorters;
-
-import net.sf.relish.rule.ElapsedTime;
-import net.sf.relish.RelishUtil;
-import net.sf.relish.CountQuantifier;
-import net.sf.relish.DataFormat;
-import net.sf.relish.NameValuePair;
-import net.sf.relish.RelishException;
-import net.sf.relish.TableMatcher;
-import net.sf.relish.web.AbstractWebServerTest;
-import net.sf.relish.web.HttpMethod;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class WebServiceStepDefsTest {
@@ -280,6 +280,110 @@ public class WebServiceStepDefsTest {
 		conn = newConnection();
 		assertEquals(200, conn.getResponseCode());
 		steps.webServiceShouldHaveRequestCountWithin("foo", 1, 1, TimeUnit.SECONDS);
+	}
+
+	@Test
+	public void testWebServiceRequestBodyJsonShouldBe_Equals_SameOrder_SameFormat() throws Exception {
+		steps.webServiceRespondsWithStatusCode("foo", 1, 1, 200);
+		steps.webServiceIsRunningAt("foo", 12473, "/foo");
+		HttpURLConnection conn = newConnection();
+		conn.setDoOutput(true);
+		new PrintStream(conn.getOutputStream()).print("{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":{\"y\":\"z\"}}");
+		conn.connect();
+		assertEquals(200, conn.getResponseCode());
+
+		steps.webServiceRequestBodyJsonShouldBe("foo", 1, null, "{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":{\"y\":\"z\"}}");
+	}
+
+	@Test
+	public void testWebServiceRequestBodyJsonShouldBe_Equals_SameOrder_DifferentFormat() throws Exception {
+		steps.webServiceRespondsWithStatusCode("foo", 1, 1, 200);
+		steps.webServiceIsRunningAt("foo", 12473, "/foo");
+		HttpURLConnection conn = newConnection();
+		conn.setDoOutput(true);
+		new PrintStream(conn.getOutputStream()).print("{\"a\": \"b\",\"c\": 1,\"d\": true,\"e\": [\"hello\",\"world\"],\"f\": {\"y\": \"z\"}}");
+		conn.connect();
+		assertEquals(200, conn.getResponseCode());
+
+		steps.webServiceRequestBodyJsonShouldBe("foo", 1, null, "{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":{\"y\":\"z\"}}");
+	}
+
+	@Test
+	public void testWebServiceRequestBodyJsonShouldBe_Equals_DifferentOrder_SameFormat() throws Exception {
+		steps.webServiceRespondsWithStatusCode("foo", 1, 1, 200);
+		steps.webServiceIsRunningAt("foo", 12473, "/foo");
+		HttpURLConnection conn = newConnection();
+		conn.setDoOutput(true);
+		new PrintStream(conn.getOutputStream()).print("{\"a\":\"b\",\"e\":[\"hello\",\"world\"],\"c\":1,\"f\":{\"y\":\"z\"},\"d\":true}");
+		conn.connect();
+		assertEquals(200, conn.getResponseCode());
+
+		steps.webServiceRequestBodyJsonShouldBe("foo", 1, null, "{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":{\"y\":\"z\"}}");
+	}
+
+	@Test
+	public void testWebServiceRequestBodyJsonShouldBe_Equals_DifferentOrder_DifferentFormat() throws Exception {
+		steps.webServiceRespondsWithStatusCode("foo", 1, 1, 200);
+		steps.webServiceIsRunningAt("foo", 12473, "/foo");
+		HttpURLConnection conn = newConnection();
+		conn.setDoOutput(true);
+		new PrintStream(conn.getOutputStream()).print("{\"a\": \"b\",\"e\": [\"hello\",\"world\"],\"c\": 1,\"f\": {\"y\":\"z\"},\"d\": true}");
+		conn.connect();
+		assertEquals(200, conn.getResponseCode());
+
+		steps.webServiceRequestBodyJsonShouldBe("foo", 1, null, "{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":{\"y\":\"z\"}}");
+	}
+
+	@Test(expected = AssertionError.class)
+	public void testWebServiceRequestBodyJsonShouldBe_NotEquals_DifferentValueForSameField() throws Exception {
+		steps.webServiceRespondsWithStatusCode("foo", 1, 1, 200);
+		steps.webServiceIsRunningAt("foo", 12473, "/foo");
+		HttpURLConnection conn = newConnection();
+		conn.setDoOutput(true);
+		new PrintStream(conn.getOutputStream()).print("{\"a\":\"b\",\"c\":2,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":{\"y\":\"z\"}}");
+		conn.connect();
+		assertEquals(200, conn.getResponseCode());
+
+		steps.webServiceRequestBodyJsonShouldBe("foo", 1, null, "{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":{\"y\":\"z\"}}");
+	}
+
+	@Test(expected = AssertionError.class)
+	public void testWebServiceRequestBodyJsonShouldBe_NotEquals_DifferentDataTypeForSameField() throws Exception {
+		steps.webServiceRespondsWithStatusCode("foo", 1, 1, 200);
+		steps.webServiceIsRunningAt("foo", 12473, "/foo");
+		HttpURLConnection conn = newConnection();
+		conn.setDoOutput(true);
+		new PrintStream(conn.getOutputStream()).print("{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":[\"y\",\"z\"]}");
+		conn.connect();
+		assertEquals(200, conn.getResponseCode());
+
+		steps.webServiceRequestBodyJsonShouldBe("foo", 1, null, "{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":{\"y\":\"z\"}}");
+	}
+
+	@Test(expected = AssertionError.class)
+	public void testWebServiceRequestBodyJsonShouldBe_NotEquals_ExtraField() throws Exception {
+		steps.webServiceRespondsWithStatusCode("foo", 1, 1, 200);
+		steps.webServiceIsRunningAt("foo", 12473, "/foo");
+		HttpURLConnection conn = newConnection();
+		conn.setDoOutput(true);
+		new PrintStream(conn.getOutputStream()).print("{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":{\"y\":\"z\"},\"g\":44.123}");
+		conn.connect();
+		assertEquals(200, conn.getResponseCode());
+
+		steps.webServiceRequestBodyJsonShouldBe("foo", 1, null, "{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":{\"y\":\"z\"}}");
+	}
+
+	@Test(expected = AssertionError.class)
+	public void testWebServiceRequestBodyJsonShouldBe_NotEquals_MissingField() throws Exception {
+		steps.webServiceRespondsWithStatusCode("foo", 1, 1, 200);
+		steps.webServiceIsRunningAt("foo", 12473, "/foo");
+		HttpURLConnection conn = newConnection();
+		conn.setDoOutput(true);
+		new PrintStream(conn.getOutputStream()).print("{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"]}");
+		conn.connect();
+		assertEquals(200, conn.getResponseCode());
+
+		steps.webServiceRequestBodyJsonShouldBe("foo", 1, null, "{\"a\":\"b\",\"c\":1,\"d\":true,\"e\":[\"hello\",\"world\"],\"f\":{\"y\":\"z\"}}");
 	}
 
 	private HttpURLConnection newConnection() throws Exception {

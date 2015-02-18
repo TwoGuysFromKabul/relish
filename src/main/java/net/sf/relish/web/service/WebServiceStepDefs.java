@@ -3,6 +3,7 @@ package net.sf.relish.web.service;
 import static net.sf.relish.RelishUtil.*;
 import static net.sf.relish.matcher.RelishMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,6 +22,8 @@ import net.sf.relish.web.HttpMethod;
 import net.sf.relish.web.HttpRequestData;
 import net.sf.relish.web.HttpResponseData;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import cucumber.api.Transform;
 import cucumber.api.java.After;
 import cucumber.api.java.en.Given;
@@ -30,6 +33,7 @@ public final class WebServiceStepDefs {
 
 	private final Map<String, WebServiceConfig> webServiceConfigByName = Collections.synchronizedMap(new HashMap<String, WebServiceConfig>());
 	private final WebServiceServer server = new WebServiceServer(new WebServiceHandler(webServiceConfigByName));
+	private final ObjectMapper jsonMapper = new ObjectMapper();
 
 	/**
 	 * Runs after each relish scenario
@@ -41,7 +45,7 @@ public final class WebServiceStepDefs {
 
 	/**
 	 * Starts a mock web service with the specified name at the specified port and path
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 * @param serverPort
@@ -63,7 +67,7 @@ public final class WebServiceStepDefs {
 
 	/**
 	 * Stops the specified web service
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 */
@@ -79,7 +83,7 @@ public final class WebServiceStepDefs {
 
 	/**
 	 * Configures the specified mock web service response body
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 * @param startIndex
@@ -105,7 +109,7 @@ public final class WebServiceStepDefs {
 
 	/**
 	 * Configures a response header for the specified mock web service.
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 * @param startIndex
@@ -136,7 +140,7 @@ public final class WebServiceStepDefs {
 	 * | header2 | value2 |
 	 * ...
 	 * </pre></code>
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 * @param startIndex
@@ -161,7 +165,7 @@ public final class WebServiceStepDefs {
 
 	/**
 	 * Configures the HTTP status code sent in the mock web service response.
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 * @param startIndex
@@ -184,7 +188,7 @@ public final class WebServiceStepDefs {
 
 	/**
 	 * Validates a mock web service request body
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 * @param startIndex
@@ -218,6 +222,43 @@ public final class WebServiceStepDefs {
 	}
 
 	/**
+	 * Asserts that a particular JSON payload is equal to another JSON payload. Two payloads are equal if they both contain the same objects and those objects
+	 * have identical values. The order in which they appear in the JSON will not matter when the equivalency is determined.
+	 *
+	 * @param webServiceName
+	 *            The name of the web service
+	 * @param startIndex
+	 *            The start index of the request the web service received
+	 * @param endIndex
+	 *            The end index of the request the web service received. Optional
+	 * @param jsonPayload
+	 *            The expected JSON payload
+	 */
+	@Then("^web service \"(\\S.+\\S)\" requests? (\\d+)(?: thru (\\d+))? payloads? should be the following JSON object:$")
+	public void webServiceRequestBodyJsonShouldBe(String webServiceName, int startIndex, Integer endIndex, String jsonPayload) {
+		WebServiceConfig config = getRequiredWebServiceConfig(webServiceName);
+
+		for (int i = startIndex; i <= getEndIndex(startIndex, endIndex); i++) {
+			HttpRequestData requestData = config.getRequestData(i);
+			String bodyJson = DataFormat.JSON.bytesToText(requestData.getBody());
+			assertSameJsonObjects(jsonPayload, bodyJson);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void assertSameJsonObjects(String expectedJson, String actualJson) {
+		try {
+			Map<String, Object> expected = jsonMapper.readValue(expectedJson, Map.class);
+			Map<String, Object> actual = jsonMapper.readValue(actualJson, Map.class);
+
+			assertEquals(expected, actual);
+		} catch (Exception ex) {
+			throw new RelishException(ex, "Unable to properly deserialize and process the expected/actual JSON values. Expected: %s, Actual: %s", expectedJson,
+					actualJson);
+		}
+	}
+
+	/**
 	 * Validates the headers received in a request to the specified mock web service. The values are in a table with "Name" and "Value" columns like this:
 	 * <code><pre>
 	 * Then web service "foo" request 1 headers should include:
@@ -226,7 +267,7 @@ public final class WebServiceStepDefs {
 	 * | header2 | value2 |
 	 * ...
 	 * </pre></code>
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 * @param startIndex
@@ -257,7 +298,7 @@ public final class WebServiceStepDefs {
 
 	/**
 	 * Validates a single header received in a request to the specified mock web service.
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 * @param startIndex
@@ -289,7 +330,7 @@ public final class WebServiceStepDefs {
 
 	/**
 	 * Validates the HTTP method used in a request to the specified mock web service
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 * @param startIndex
@@ -312,7 +353,7 @@ public final class WebServiceStepDefs {
 
 	/**
 	 * Validates the number of requests received by the specified web service.
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 * @param requestCountQuantifier
@@ -330,7 +371,7 @@ public final class WebServiceStepDefs {
 
 	/**
 	 * Validates the number of requests received by the specified web service within a specified time.
-	 * 
+	 *
 	 * @param webServiceName
 	 *            The name used to refer to this web service in the DSL
 	 * @param requestCount

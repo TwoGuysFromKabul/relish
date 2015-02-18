@@ -17,26 +17,26 @@ import java.util.concurrent.TimeUnit;
 import net.sf.relish.CountQuantifier;
 import net.sf.relish.DataFormat;
 import net.sf.relish.ExpandingArrayList;
-import net.sf.relish.RelishUtil;
 import net.sf.relish.RelishException;
+import net.sf.relish.RelishUtil;
 import net.sf.relish.transformer.CountQuantifierTransformer;
 import net.sf.relish.transformer.IsNullTransformer;
 import net.sf.relish.transformer.NullSafeIntegerTransformer;
 import net.sf.relish.transformer.StringToBooleanTransformer;
-import net.sf.xenqtt.client.MqttClient;
-import net.sf.xenqtt.client.MqttClientListener;
-import net.sf.xenqtt.client.PublishMessage;
-import net.sf.xenqtt.client.SyncMqttClient;
-import net.sf.xenqtt.message.ConnectMessage;
-import net.sf.xenqtt.message.ConnectReturnCode;
-import net.sf.xenqtt.message.DisconnectMessage;
-import net.sf.xenqtt.message.PubMessage;
-import net.sf.xenqtt.message.QoS;
-import net.sf.xenqtt.message.SubscribeMessage;
-import net.sf.xenqtt.message.UnsubscribeMessage;
-import net.sf.xenqtt.mockbroker.Client;
-import net.sf.xenqtt.mockbroker.MockBroker;
-import net.sf.xenqtt.mockbroker.MockBrokerHandler;
+import net.xenqtt.client.MqttClient;
+import net.xenqtt.client.MqttClientListener;
+import net.xenqtt.client.PublishMessage;
+import net.xenqtt.client.SyncMqttClient;
+import net.xenqtt.message.ConnectMessage;
+import net.xenqtt.message.ConnectReturnCode;
+import net.xenqtt.message.DisconnectMessage;
+import net.xenqtt.message.PubMessage;
+import net.xenqtt.message.QoS;
+import net.xenqtt.message.SubscribeMessage;
+import net.xenqtt.message.UnsubscribeMessage;
+import net.xenqtt.mockbroker.Client;
+import net.xenqtt.mockbroker.MockBroker;
+import net.xenqtt.mockbroker.MockBrokerHandler;
 import cucumber.api.Transform;
 import cucumber.api.java.After;
 import cucumber.api.java.en.Given;
@@ -69,7 +69,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Adds a username/password the mock broker will accept.
-	 * 
+	 *
 	 * @param username
 	 *            The username to allow
 	 * @param password
@@ -84,7 +84,7 @@ public final class MqttBrokerStepDefs {
 	/**
 	 * Starts the mock MQTT broker on the specified port and optionally allows anonymous access. If anonymous access is allowed then the broker will accept any
 	 * username/password combination. By default anonymous access is allowed.
-	 * 
+	 *
 	 * @param port
 	 *            The port to start the broker on
 	 * @param allowAnonymousAccess
@@ -97,7 +97,7 @@ public final class MqttBrokerStepDefs {
 			throw new RelishException("You may not start the MQTT broker because it is already running at %s", broker.getURI());
 		}
 
-		broker = new MockBroker(new BrokerHandler(), 15, port, allowAnonymousAccess, true, 50);
+		broker = new MockBroker(new BrokerHandler(), 15, port, allowAnonymousAccess, false, false, 50);
 		broker.init();
 		String id = "MQT" + System.identityHashCode(broker);
 		broker.addCredentials(id, id);
@@ -110,7 +110,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Makes the broker publish a message with a payload to the client
-	 * 
+	 *
 	 * @param retained
 	 *            If included the retained flag will be set in the message header
 	 * @param qos
@@ -133,7 +133,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Makes the broker publish a message with a payload to the client. The payload is read from a file
-	 * 
+	 *
 	 * @param retained
 	 *            If included the retained flag will be set in the message header
 	 * @param qos
@@ -158,7 +158,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates whether the retained flag is set on messages published by the client to the broker.
-	 * 
+	 *
 	 * @param startIndex
 	 *            The index of the first message in the range to validate. The first message s index 1, the second message is index 2, etc. If the client ID is
 	 *            specified then the index is per client: the first message published to the topic by the client is index 1, the second message published to the
@@ -188,7 +188,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates the QoS of messages published by the client to the broker.
-	 * 
+	 *
 	 * @param startIndex
 	 *            The index of the first message in the range to validate. The first message s index 1, the second message is index 2, etc. If the client ID is
 	 *            specified then the index is per client: the first message published to the topic by the client is index 1, the second message published to the
@@ -217,7 +217,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates the payload of messages published by the client to the broker.
-	 * 
+	 *
 	 * @param startIndex
 	 *            The index of the first message in the range to validate. The first message s index 1, the second message is index 2, etc. If the client ID is
 	 *            specified then the index is per client: the first message published to the topic by the client is index 1, the second message published to the
@@ -253,7 +253,7 @@ public final class MqttBrokerStepDefs {
 	/**
 	 * Validates the number of messages published to a topic. If client ID is specified then the number of messages published to the topic by that client is
 	 * validated; otherwise, the number of messages published to the topic by all clients is validated.
-	 * 
+	 *
 	 * @param countQualifier
 	 *            How the count will be evaluated
 	 * @param count
@@ -275,7 +275,7 @@ public final class MqttBrokerStepDefs {
 	/**
 	 * Waits for a specified number of messages to be published to a topic. If client ID is specified then the number of messages published to the topic by that
 	 * client is counted; otherwise, the number of messages published to the topic by all clients is counted.
-	 * 
+	 *
 	 * @param count
 	 *            The number of messages to wait for
 	 * @param clientId
@@ -303,7 +303,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates the specified client is connected. This step will wait up to the specified timeout for the client to be connected.
-	 * 
+	 *
 	 * @param clientId
 	 *            The ID of the client that is connected
 	 * @param timeout
@@ -326,7 +326,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates the keep alive interval for the specified client
-	 * 
+	 *
 	 * @param clientId
 	 *            The ID of the client to validate the keep alive interval for
 	 * @param keepAliveInterval
@@ -339,7 +339,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates the username for the specified client
-	 * 
+	 *
 	 * @param clientId
 	 *            The ID of the client to validate the username for
 	 * @param username
@@ -352,7 +352,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates the password for the specified client
-	 * 
+	 *
 	 * @param clientId
 	 *            The ID of the client to validate the password for
 	 * @param password
@@ -365,7 +365,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates whether the specified client connected with a clean session
-	 * 
+	 *
 	 * @param clientId
 	 *            The ID of the client to validate the clean session status of
 	 * @param should
@@ -381,7 +381,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates the Will Message configured for the specified client. This step does not validate the message body.
-	 * 
+	 *
 	 * @param clientId
 	 *            The ID of the client to validate the Will Message for
 	 * @param retained
@@ -398,7 +398,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates the Will Message configured for the specified client. This step does not validate the message body.
-	 * 
+	 *
 	 * @param clientId
 	 *            The ID of the client to validate the Will Message for
 	 * @param retained
@@ -441,7 +441,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates the specified client is subscribed to the topic
-	 * 
+	 *
 	 * @param clientId
 	 *            The ID of the client that should be subscribed
 	 * @param topic
@@ -473,7 +473,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validates the client is unsubscribed from the topic
-	 * 
+	 *
 	 * @param clientId
 	 *            The ID of the client that should be unsubscribed
 	 * @param topic
@@ -499,7 +499,7 @@ public final class MqttBrokerStepDefs {
 
 	/**
 	 * Validate the client is disconnected from the broker
-	 * 
+	 *
 	 * @param clientId
 	 *            The ID of the client that should be disconnected
 	 * @param timeout
