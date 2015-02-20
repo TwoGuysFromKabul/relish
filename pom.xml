@@ -273,9 +273,9 @@
 		</profile>
 	</profiles>
 	<scm>
-		<connection>scm:svn:https://svn.code.sf.net/p/relish/code/trunk</connection>
-		<developerConnection>scm:svn:https://svn.code.sf.net/p/relish/code/trunk</developerConnection>
-		<url>https://svn.code.sf.net/p/relish/code/trunk</url>
+		<connection>scm:git:https://github.com/TwoGuysFromKabul/relish</connection>
+		<developerConnection>scm:git:https://github.com/TwoGuysFromKabul/relish</developerConnection>
+		<url>https://github.com/TwoGuysFromKabul/relish</url>
 	</scm>
 	<developers>
 		<developer>
