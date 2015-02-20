@@ -1,9 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.sf.relish</groupId>
 	<artifactId>relish</artifactId>
-	<version>0.5.4-SNAPSHOT</version>
+	<version>0.5.5-SNAPSHOT</version>
 	<name>Relish</name>
 	<description>Functional testing DSL built using Cucumber-JVM / Gherkin</description>
 	<url>http://relish.sf.net</url>
@@ -276,7 +275,8 @@
 		<connection>scm:git:https://github.com/TwoGuysFromKabul/relish</connection>
 		<developerConnection>scm:git:https://github.com/TwoGuysFromKabul/relish</developerConnection>
 		<url>https://github.com/TwoGuysFromKabul/relish</url>
-	</scm>
+	  <tag>HEAD</tag>
+  </scm>
 	<developers>
 		<developer>
 			<id>jim</id>
