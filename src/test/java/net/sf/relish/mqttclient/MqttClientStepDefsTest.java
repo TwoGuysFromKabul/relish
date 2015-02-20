@@ -34,6 +34,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class MqttClientStepDefsTest {

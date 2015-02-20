@@ -55,6 +55,8 @@ public final class MqttClientStepDefs {
 				info.client.close();
 			}
 		}
+
+		clientInfoById.clear();
 	}
 
 	/**
