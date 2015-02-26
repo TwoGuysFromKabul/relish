@@ -5,6 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -12,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import net.sf.relish.RelishException;
 import cucumber.api.java.After;
@@ -44,7 +48,7 @@ public final class ConsoleAppStepDefs {
 	 * included on the class path. Command line arguments may also be specified. The command line arguments are space delimited. You may surround an argument
 	 * with double quotes if it contains a space. The java class must contain a <code>public static void stop()</code> method which will be invoked when the
 	 * application is stopped.
-	 * 
+	 *
 	 * @param javaClass
 	 *            The fully qualified name of the class to run the <code>main</code> method in
 	 * @param jarFile
@@ -80,9 +84,46 @@ public final class ConsoleAppStepDefs {
 		consoleApps.put(javaClass, consoleApp);
 	}
 
+	@When("^console app \"(\\S.+\\S)\" is listening on port \"([\\d]+)\"(?: within ([\\d]+) (seconds|milliseconds))?$")
+	public void whenConsoleAppIsListeningOnPort(String appName, int port, Long within, TimeUnit timeUnit) {
+		if (!consoleApps.containsKey(appName)) {
+			throw new RelishException("The console application %s was never started.", appName);
+		}
+
+		within = within != null ? within : 0L;
+		timeUnit = timeUnit != null ? timeUnit : TimeUnit.MILLISECONDS;
+		assertIsListeningOnPort(port, within, timeUnit);
+	}
+
+	private void assertIsListeningOnPort(int port, Long within, TimeUnit timeUnit) {
+		long now = System.currentTimeMillis();
+		long duration = within != 0 ? now + TimeUnit.MILLISECONDS.convert(within, timeUnit) : Long.MAX_VALUE;
+		SocketAddress address = new InetSocketAddress("localhost", port);
+		while (now < duration) {
+			try {
+				Socket socket = new Socket();
+				socket.connect(address);
+				socket.close();
+
+				return;
+			} catch (Exception ignore) {
+			} finally {
+				try {
+					Thread.sleep(50);
+				} catch (InterruptedException ex) {
+					Thread.currentThread().interrupt();
+				}
+				now = System.currentTimeMillis();
+			}
+		}
+
+		throw new RelishException("Unable to connect to the port %d within the allotted time. Allotted (0 = forever for all practical purposes): %d", port,
+				within);
+	}
+
 	/**
 	 * Stops a console app previously started with "console app "..." is running ...". The class's <code>public static void stop()</code> method is invoked.
-	 * 
+	 *
 	 * @param javaClass
 	 *            The fully qualified name of the running class to stop.
 	 */

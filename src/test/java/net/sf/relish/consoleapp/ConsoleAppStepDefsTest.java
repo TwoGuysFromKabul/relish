@@ -2,9 +2,12 @@ package net.sf.relish.consoleapp;
 
 import static org.junit.Assert.*;
 
+import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import net.sf.relish.RelishException;
 import net.sf.relish.TestMainClass;
@@ -190,6 +193,22 @@ public class ConsoleAppStepDefsTest {
 		assertEquals(1, stopCount);
 	}
 
+	@Test
+	public void testWhenConsoleAppIsListeningOnPort() throws Exception {
+		steps.javaClassIsRunning(TestClass3.class.getName(), null, null);
+		steps.whenConsoleAppIsListeningOnPort(TestClass3.class.getName(), 17452, 3L, TimeUnit.SECONDS);
+		steps.javaClassIsStopped(TestClass3.class.getName());
+	}
+
+	@Test
+	public void testWhenConsoleAppIsListeningOnPort_DoesNotStartInTime() throws Exception {
+		expectedException.expect(RelishException.class);
+
+		steps.javaClassIsRunning(TestClass3.class.getName(), null, null);
+		steps.whenConsoleAppIsListeningOnPort(TestClass3.class.getName(), 17452, 10L, TimeUnit.MILLISECONDS);
+		steps.javaClassIsStopped(TestClass3.class.getName());
+	}
+
 	static class TestClass1 {
 
 		private static final CountDownLatch shutdownLatch = new CountDownLatch(1);
@@ -221,4 +240,40 @@ public class ConsoleAppStepDefsTest {
 			shutdownLatch.countDown();
 		}
 	}
+
+	static class TestClass3 {
+
+		private static final CountDownLatch shutdownLatch = new CountDownLatch(1);
+
+		public static void main(String... args) throws Exception {
+			final AtomicReference<ServerSocket> socketRef = new AtomicReference<ServerSocket>();
+			Thread t = new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(2000);
+						socketRef.set(new ServerSocket(17452));
+					} catch (Exception ex) {
+					}
+
+				}
+
+			});
+			t.start();
+			t.join();
+			shutdownLatch.await();
+
+			try {
+				socketRef.get().close();
+			} catch (Exception ignore) {
+			}
+		}
+
+		public static void stop() {
+			shutdownLatch.countDown();
+		}
+
+	}
+
 }
