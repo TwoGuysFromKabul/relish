@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.sf.relish</groupId>
 	<artifactId>relish</artifactId>
-	<version>0.5.5-SNAPSHOT</version>
+	<version>0.5.6-SNAPSHOT</version>
 	<name>Relish</name>
 	<description>Functional testing DSL built using Cucumber-JVM / Gherkin</description>
 	<url>http://relish.sf.net</url>
